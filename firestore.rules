@@ -1,0 +1,81 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users/{userId}/customExamples
+    // Document ID: auto-generated
+    // Fields:
+    //   - phrase: string (required, 1-200 chars)
+    //   - meaning: string (required, 1-500 chars)
+    //   - example: string (required, 1-1000 chars)
+    //   - category: string (required, enum: grammar, phrasal_verbs, idioms, speaking, slang, proverbs)
+    //   - userId: string (required, must match auth.uid)
+    //   - isCustom: bool (required, true)
+    //   - createdAt: string (required, ISO 8601)
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidExample(data) {
+      let validCategories = ['grammar', 'phrasal_verbs', 'idioms', 'speaking', 'slang', 'proverbs'];
+      return data.phrase is string && data.phrase.size() >= 1 && data.phrase.size() <= 200 &&
+             data.meaning is string && data.meaning.size() >= 1 && data.meaning.size() <= 500 &&
+             data.example is string && data.example.size() >= 1 && data.example.size() <= 1000 &&
+             data.category in validCategories &&
+             data.isCustom == true &&
+             data.userId == request.auth.uid &&
+             data.createdAt is string;
+    }
+
+    function isValidResource(data) {
+      let validTypes = ['podcasts', 'newspapers', 'youtube', 'movies'];
+      return data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
+             (!('url' in data) || (data.url is string && data.url.size() >= 1 && data.url.size() <= 1000)) &&
+             data.type in validTypes &&
+             data.userId == request.auth.uid &&
+             data.createdAt is string &&
+             (!('watched' in data) || data.watched is bool) &&
+             (!('vocabulary' in data) || data.vocabulary is list);
+    }
+
+    // Rules for daily content
+    match /dailyContent/{date} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated(); // Allow users to trigger AI generation and save
+    }
+
+    // Rules for custom examples
+    match /users/{userId}/customExamples/{exampleId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidExample(request.resource.data);
+      allow update: if isOwner(userId) && isValidExample(request.resource.data) && 
+                      request.resource.data.userId == resource.data.userId;
+      allow delete: if isOwner(userId);
+    }
+
+    // Rules for custom resources
+    match /users/{userId}/customResources/{resourceId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidResource(request.resource.data);
+      allow update: if isOwner(userId) && isValidResource(request.resource.data) && 
+                      request.resource.data.userId == resource.data.userId;
+      allow delete: if isOwner(userId);
+    }
+
+    // Connection test collection
+    match /test/connection {
+      allow read: if true;
+    }
+  }
+}

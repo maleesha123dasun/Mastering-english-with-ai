@@ -1,0 +1,7 @@
+{
+  "name": "English Mastery Hub",
+  "description": "A comprehensive English learning platform featuring 200+ examples each for grammar patterns, phrasal verbs, idioms, speaking patterns, slangs, and proverbs, with the ability to add your own custom examples.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

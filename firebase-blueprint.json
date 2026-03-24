@@ -1,0 +1,98 @@
+{
+  "entities": {
+    "UserExample": {
+      "title": "User Custom Example",
+      "description": "A custom English example added by the user.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "category": { "type": "string", "enum": ["grammar", "phrasal_verbs", "idioms", "speaking", "slang", "proverbs"] },
+        "phrase": { "type": "string", "description": "The main phrase or pattern." },
+        "meaning": { "type": "string", "description": "The meaning or explanation." },
+        "example": { "type": "string", "description": "A usage example." },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "userId": { "type": "string" }
+      },
+      "required": ["category", "phrase", "meaning", "example", "createdAt", "userId"]
+    },
+    "CustomResource": {
+      "title": "User Custom Resource",
+      "description": "A custom online resource added by the user.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["podcasts", "newspapers", "youtube", "movies"] },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "url": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "userId": { "type": "string" },
+        "watched": { "type": "boolean" },
+        "imageUrl": { "type": "string", "description": "Optional image URL for the resource (especially for movies)." },
+        "vocabulary": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "word": { "type": "string" },
+              "meaning": { "type": "string" },
+              "example": { "type": "string" }
+            },
+            "required": ["word", "meaning", "example"]
+          }
+        }
+      },
+      "required": ["type", "title", "createdAt", "userId"]
+    },
+    "DailyWord": {
+      "title": "Daily Word",
+      "description": "A daily English word with meaning and example.",
+      "type": "object",
+      "properties": {
+        "word": { "type": "string" },
+        "meaning": { "type": "string" },
+        "example": { "type": "string" },
+        "pronunciation": { "type": "string" },
+        "date": { "type": "string" }
+      },
+      "required": ["word", "meaning", "example", "date"]
+    },
+    "DailyQuiz": {
+      "title": "Daily Quiz",
+      "description": "A daily quiz based on the word of the day or general English.",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string" },
+        "questions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "question": { "type": "string" },
+              "options": { "type": "array", "items": { "type": "string" } },
+              "correctAnswer": { "type": "string" },
+              "explanation": { "type": "string" }
+            },
+            "required": ["question", "options", "correctAnswer"]
+          }
+        }
+      },
+      "required": ["date", "questions"]
+    }
+  },
+  "firestore": {
+    "/dailyContent/{date}": {
+      "schema": "DailyWord",
+      "description": "Collection of daily words and quizzes."
+    },
+    "/users/{userId}/customExamples/{exampleId}": {
+      "schema": "UserExample",
+      "description": "Collection of custom examples added by a specific user."
+    },
+    "/users/{userId}/customResources/{resourceId}": {
+      "schema": "CustomResource",
+      "description": "Collection of custom online resources added by a specific user."
+    }
+  }
+}
