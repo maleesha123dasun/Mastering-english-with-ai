@@ -211,7 +211,7 @@ export const OnlineResources = () => {
     description: '',
     url: '',
     imageUrl: '',
-    type: 'podcasts' as 'podcasts' | 'newspapers' | 'youtube' | 'movies'
+    type: 'podcasts' as 'podcasts' | 'newspapers' | 'youtube' | 'movies' | 'websites'
   });
 
   useEffect(() => {
@@ -247,6 +247,9 @@ export const OnlineResources = () => {
         } else if (data.type === 'movies') {
           icon = Film;
           color = 'bg-amber-500';
+        } else if (data.type === 'websites') {
+          icon = Globe;
+          color = 'bg-sky-500';
         }
 
         return {
@@ -334,6 +337,7 @@ export const OnlineResources = () => {
     { id: 'newspapers', label: 'Newspapers', icon: Newspaper, color: 'text-emerald-500' },
     { id: 'youtube', label: 'YouTube', icon: Youtube, color: 'text-red-500' },
     { id: 'movies', label: 'Movies', icon: Film, color: 'text-amber-500' },
+    { id: 'websites', label: 'Websites', icon: Globe, color: 'text-sky-500' },
   ];
 
   const categoryImages: Record<string, string> = {
@@ -342,6 +346,7 @@ export const OnlineResources = () => {
     newspapers: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&q=80&w=1600&h=400',
     youtube: 'https://images.unsplash.com/photo-1524508762098-fd966ffb6ef9?auto=format&fit=crop&q=80&w=1600&h=400',
     movies: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&q=80&w=1600&h=400',
+    websites: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&q=80&w=1600&h=400',
   };
 
   return (
@@ -576,6 +581,34 @@ export const OnlineResources = () => {
             </motion.section>
           )}
         </AnimatePresence>
+
+        {/* Websites Section */}
+        <AnimatePresence mode="wait">
+          {(activeSubCategory === 'all' || activeSubCategory === 'websites') && (
+            <motion.section
+              key="websites"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <div className="flex items-center gap-4 mb-10">
+                <div className="w-12 h-12 rounded-2xl bg-sky-50 flex items-center justify-center text-sky-600">
+                  <Globe size={24} />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-900">Websites</h2>
+                  <p className="text-slate-500">Other useful English learning websites.</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {getResources('websites').map((resource, idx) => (
+                  <ResourceCard key={resource.id || idx} resource={resource} delay={idx * 0.1} onDelete={handleDeleteResource} />
+                ))}
+              </div>
+            </motion.section>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Add Resource Modal */}
@@ -601,13 +634,13 @@ export const OnlineResources = () => {
               <form onSubmit={handleAddResource} className="space-y-6">
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wider">Resource Type</label>
-                  <div className="grid grid-cols-5 gap-3">
-                    {['podcasts', 'newspapers', 'youtube', 'movies'].map((type) => (
+                  <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+                    {['podcasts', 'newspapers', 'youtube', 'movies', 'websites'].map((type) => (
                       <button
                         key={type}
                         type="button"
                         onClick={() => setNewResource(prev => ({ ...prev, type: type as any }))}
-                        className={`py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all border ${
+                        className={`py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all border ${
                           newResource.type === type 
                             ? 'bg-slate-900 text-white border-slate-900' 
                             : 'bg-white text-slate-500 border-slate-100 hover:border-slate-200'

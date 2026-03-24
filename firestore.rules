@@ -39,9 +39,13 @@ service cloud.firestore {
     }
 
     function isValidResource(data) {
-      let validTypes = ['podcasts', 'newspapers', 'youtube', 'movies'];
-      return data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
-             (!('url' in data) || (data.url is string && data.url.size() >= 1 && data.url.size() <= 1000)) &&
+      let validTypes = ['podcasts', 'newspapers', 'youtube', 'movies', 'websites'];
+      let allowedFields = ['title', 'description', 'url', 'imageUrl', 'type', 'tags', 'createdAt', 'userId', 'vocabulary', 'watched'];
+      return data.keys().hasOnly(allowedFields) &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 500 &&
+             data.description is string && data.description.size() >= 1 && data.description.size() <= 2000 &&
+             (!('url' in data) || (data.url is string && data.url.size() >= 1 && data.url.size() <= 2000)) &&
+             (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() <= 2000)) &&
              data.type in validTypes &&
              data.userId == request.auth.uid &&
              data.createdAt is string &&
