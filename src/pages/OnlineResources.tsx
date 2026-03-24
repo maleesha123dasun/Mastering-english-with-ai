@@ -319,11 +319,28 @@ export const OnlineResources = () => {
 
   const handleAddResource = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user) {
+      toast.error('You must be logged in to add resources.');
+      return;
+    }
+    const title = newResource.title.trim();
+    const description = newResource.description.trim();
+    const url = newResource.url.trim();
+    const imageUrl = newResource.imageUrl.trim();
+
+    if (!title || !description) {
+      toast.error('Title and description are required!');
+      return;
+    }
+
+    if (newResource.type !== 'movies' && !url) {
+      toast.error('URL is required for this resource type!');
+      return;
+    }
 
     // Check for duplicate URL
-    if (newResource.url) {
-      const isDuplicate = customResources.some(r => r.url === newResource.url);
+    if (url) {
+      const isDuplicate = customResources.some(r => r.url === url);
       if (isDuplicate) {
         toast.error('This URL is already in your resources!');
         return;
@@ -334,21 +351,21 @@ export const OnlineResources = () => {
 
     try {
       const resourceData: any = {
-        title: newResource.title.trim(),
-        description: newResource.description.trim(),
+        title,
+        description,
         type: newResource.type,
         tags: ['My Resource'],
-        createdAt: Timestamp.now().toDate().toISOString(),
+        createdAt: new Date().toISOString(),
         userId: user.uid,
         vocabulary: []
       };
 
-      if (newResource.url && newResource.url.trim()) {
-        resourceData.url = newResource.url.trim();
+      if (url) {
+        resourceData.url = url;
       }
 
-      if (newResource.imageUrl && newResource.imageUrl.trim()) {
-        resourceData.imageUrl = newResource.imageUrl.trim();
+      if (imageUrl) {
+        resourceData.imageUrl = imageUrl;
       }
 
       const path = `users/${user.uid}/customResources`;

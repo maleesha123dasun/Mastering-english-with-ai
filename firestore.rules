@@ -49,6 +49,7 @@ service cloud.firestore {
              data.type in validTypes &&
              data.userId == request.auth.uid &&
              data.createdAt is string &&
+             (!('tags' in data) || data.tags is list) &&
              (!('watched' in data) || data.watched is bool) &&
              (!('vocabulary' in data) || data.vocabulary is list);
     }
