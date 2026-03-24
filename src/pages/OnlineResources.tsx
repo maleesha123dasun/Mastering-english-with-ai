@@ -200,6 +200,57 @@ const resources: Record<string, Resource[]> = {
   ]
 };
 
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId: string | undefined;
+    email: string | null | undefined;
+    emailVerified: boolean | undefined;
+    isAnonymous: boolean | undefined;
+    tenantId: string | null | undefined;
+    providerInfo: {
+      providerId: string;
+      displayName: string | null;
+      email: string | null;
+      photoUrl: string | null;
+    }[];
+  }
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+      tenantId: auth.currentUser?.tenantId,
+      providerInfo: auth.currentUser?.providerData.map(provider => ({
+        providerId: provider.providerId,
+        displayName: provider.displayName,
+        email: provider.email,
+        photoUrl: provider.photoURL
+      })) || []
+    },
+    operationType,
+    path
+  }
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
+
 export const OnlineResources = () => {
   const [activeSubCategory, setActiveSubCategory] = useState<'all' | 'podcasts' | 'newspapers' | 'youtube' | 'movies'>('all');
   const [customResources, setCustomResources] = useState<Resource[]>([]);
@@ -283,22 +334,36 @@ export const OnlineResources = () => {
 
     try {
       const resourceData: any = {
-        ...newResource,
+        title: newResource.title.trim(),
+        description: newResource.description.trim(),
+        type: newResource.type,
         tags: ['My Resource'],
         createdAt: Timestamp.now().toDate().toISOString(),
         userId: user.uid,
         vocabulary: []
       };
 
-      if (newResource.type === 'movies' && !newResource.url) {
-        delete resourceData.url;
+      if (newResource.url && newResource.url.trim()) {
+        resourceData.url = newResource.url.trim();
       }
 
-      await addDoc(collection(db, `users/${user.uid}/customResources`), resourceData);
+      if (newResource.imageUrl && newResource.imageUrl.trim()) {
+        resourceData.imageUrl = newResource.imageUrl.trim();
+      }
+
+      const path = `users/${user.uid}/customResources`;
+      try {
+        await addDoc(collection(db, path), resourceData);
+      } catch (error) {
+        handleFirestoreError(error, OperationType.WRITE, path);
+      }
+      
       setIsModalOpen(false);
       setNewResource({ title: '', description: '', url: '', imageUrl: '', type: 'podcasts' });
-    } catch (error) {
+      toast.success('Resource added successfully!');
+    } catch (error: any) {
       console.error("Error adding resource: ", error);
+      toast.error('Failed to add resource. Please check the console for details.');
     } finally {
       setIsSubmitting(false);
     }
